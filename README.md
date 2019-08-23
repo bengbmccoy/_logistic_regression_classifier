@@ -1,2 +1,8 @@
 # _logistic_regression_classifier
 A logistic regression classifier for general use
+
+This logistic regression classifier is expected to be a "off the shelf" usable
+script that can generally be helpful in future use.
+
+Thanks to Andrew Ng and Stanford Uni, as this logistic regression classifier
+is based on material taught in Andrew Ng's Machine Learning course.
