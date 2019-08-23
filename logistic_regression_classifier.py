@@ -14,13 +14,14 @@ and try to determine the cause of an absence
 
 import pandas as pd
 import numpy as np
+import math
 
 def get_data(filepath):
     return pd.read_csv(filepath)
 
 def init_matrices(data, y_vector, X_columns):
     X = data[X_columns].values
-    y = np.vstack(data[y_vector].values)
+    y = data[y_vector].values
     return X, y
 
 def scale_features(X, option):
@@ -36,6 +37,21 @@ def scale_features(X, option):
 
 def add_ones_column(X):
     return np.insert(X, 0, 1, axis=1)
+
+def init_theta_vector(theta_len):
+    return np.ones(theta_len)
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def predict(X, theta):
+    return sigmoid(np.dot(X, theta))
+
+def cost_func(h, y):
+    return -1/len(h) * np.sum(y * np.log(h) + (1-y) * (np.log(1-h)))
+
+def gradient(X, h, y):
+    return np.matmul(X.T, (h - y)) / len(h)
 
 def main():
 
@@ -55,6 +71,22 @@ def main():
     X = add_ones_column(X)
     # print(X)
     print('Ones column added')
+
+    theta = init_theta_vector(X.shape[1])
+    # print(theta)
+    print('Theta vector initialised')
+
+    h = predict(X, theta)
+    print(h)
+    print('Calculated predictions')
+
+    J = cost_func(h, y)
+    print(J)
+    print('Calculated Cost')
+
+    grad = gradient(X, h, y)
+    print(grad)
+    print('Calculated gradient')
 
 
 
