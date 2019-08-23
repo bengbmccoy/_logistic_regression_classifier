@@ -39,7 +39,7 @@ def add_ones_column(X):
     return np.insert(X, 0, 1, axis=1)
 
 def init_theta_vector(theta_len):
-    return np.ones(theta_len)
+    return np.random.random(3)
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -77,17 +77,28 @@ def main():
     print('Theta vector initialised')
 
     h = predict(X, theta)
-    print(h)
+    # print(h)
     print('Calculated predictions')
 
     J = cost_func(h, y)
-    print(J)
+    # print(J)
     print('Calculated Cost')
 
     grad = gradient(X, h, y)
-    print(grad)
+    # print(grad)
     print('Calculated gradient')
 
+    print(theta)
+
+    alpha = 0.05
+    for i in range(10000):
+        h = predict(X, theta)
+        # print(cost_func(h,y))
+        for j in range(len(theta)):
+            theta[j] = theta[j] - alpha/len(h) * np.sum(np.dot((h-y), (X[:,j])))
+
+    print(theta)
+    print(cost_func(h,y))
 
 
 main()
