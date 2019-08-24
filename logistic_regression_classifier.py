@@ -140,7 +140,6 @@ def main():
     # print(grad)
     print('Calculated gradient')
 
-    epochs = 5000
     learned_theta, J_history = learn_theta(float(args.alpha), args.epochs, X, theta, y, args.print)
     # print(learned_theta)
     # print(J_history)
