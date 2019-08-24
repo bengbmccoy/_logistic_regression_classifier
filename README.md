@@ -8,4 +8,4 @@ Thanks to Andrew Ng and Stanford Uni, as this logistic regression classifier
 is based on material taught in Andrew Ng's Machine Learning course.
 
 An example of the usage in the command line:
-python .\logistic_regression_classifier.py .\simple_training.csv min-max Y X1 X2 -epochs 100000 -alpha 0.05 -p
+python .\logistic_regression_classifier.py .\simple_training.csv Y X1 X2
