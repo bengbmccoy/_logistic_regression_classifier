@@ -15,16 +15,20 @@ and try to determine the cause of an absence
 import pandas as pd
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+
 
 def get_data(filepath):
     return pd.read_csv(filepath)
 
 def init_matrices(data, y_vector, X_columns):
+    '''separate the data into an X feature matrix and a y results vector'''
     X = data[X_columns].values
     y = data[y_vector].values
     return X, y
 
 def scale_features(X, option):
+    '''scales features based on the scaling type'''
     X_norm = X
     for col in range(X_norm.shape[1]):
         if option == 'min-max':
@@ -39,7 +43,8 @@ def add_ones_column(X):
     return np.insert(X, 0, 1, axis=1)
 
 def init_theta_vector(theta_len):
-    return np.random.random(3)
+    '''creates a vector of random theta values'''
+    return np.random.random(theta_len)
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -52,6 +57,25 @@ def cost_func(h, y):
 
 def gradient(X, h, y):
     return np.matmul(X.T, (h - y)) / len(h)
+
+def learn_theta(alpha, epochs, X, theta, y):
+    '''progressively learns and improves the values of theta using the Learning
+    rate alpha over number of epochs stated. Records the history of the cost
+    function to be plotted for debugging'''
+    J_history = []
+    for i in range(epochs):
+        h = predict(X, theta)
+        # print(cost_func(h,y))
+        for j in range(len(theta)):
+            theta[j] = theta[j] - alpha/len(h) * np.sum(np.dot((h-y), (X[:,j])))
+        J_history.append(cost_func(h,y))
+
+    return theta, J_history
+
+
+def plot_cost(J_history):
+    plt.plot(range(len(J_history)), J_history)
+    plt.show()
 
 def main():
 
@@ -88,17 +112,18 @@ def main():
     # print(grad)
     print('Calculated gradient')
 
-    print(theta)
-
     alpha = 0.05
-    for i in range(10000):
-        h = predict(X, theta)
-        # print(cost_func(h,y))
-        for j in range(len(theta)):
-            theta[j] = theta[j] - alpha/len(h) * np.sum(np.dot((h-y), (X[:,j])))
+    epochs = 5000
+    learned_theta, J_history = learn_theta(alpha, epochs, X, theta, y)
+    # print(learned_theta)
+    # print(J_history)
+    print('Theta values learned and J_history saved')
 
-    print(theta)
-    print(cost_func(h,y))
+    plot_cost(J_history)
+
+    X_guess = [1, 7.673756466,3.508563011]
+    guess = predict(X_guess, learned_theta)
+    print(guess)
 
 
 main()
