@@ -9,13 +9,16 @@ It will begin as a simple one class classifier, but I expect to expand it
 to be able to handle any number of classes.
 
 I will use data from http://archive.ics.uci.edu/ml/datasets/Absenteeism+at+work
-and try to determine the cause of an absence
+and try to determine the cause of an absence.
+
+The script uses the argparse library to take arugments from the command line.
 '''
 
 import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import argparse
 
 
 def get_data(filepath):
@@ -58,7 +61,7 @@ def cost_func(h, y):
 def gradient(X, h, y):
     return np.matmul(X.T, (h - y)) / len(h)
 
-def learn_theta(alpha, epochs, X, theta, y):
+def learn_theta(alpha, epochs, X, theta, y, print_status):
     '''progressively learns and improves the values of theta using the Learning
     rate alpha over number of epochs stated. Records the history of the cost
     function to be plotted for debugging'''
@@ -68,6 +71,9 @@ def learn_theta(alpha, epochs, X, theta, y):
         # print(cost_func(h,y))
         for j in range(len(theta)):
             theta[j] = theta[j] - alpha/len(h) * np.sum(np.dot((h-y), (X[:,j])))
+
+        if print_status == True:
+            print(cost_func(h,y))
         J_history.append(cost_func(h,y))
 
     return theta, J_history
@@ -79,16 +85,38 @@ def plot_cost(J_history):
 
 def main():
 
-    data = get_data('simple_training.csv')
-    # print(data)
-    print('Data Collected')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data', type=str,
+                        help='training data filepath')
+    parser.add_argument('y_column', type=str,
+                        help='the column title of the outputs column')
+    parser.add_argument('X_columns', nargs='+',
+                        help='the columns to be included as features in X matrix')
+    parser.add_argument('-scaling', type=str,
+                        help='sclaing options are: min-max, mean-norm, standardization')
+    parser.add_argument('-epochs', nargs='?', type=int, default=5000,
+                        help='the number of iterations to run through')
+    parser.add_argument('-alpha', nargs='?', type=float, default=0.01,
+                        help='the chosen learning rate')
+    parser.add_argument('-pr', '--print',
+                        help='prints the cost function after erach iteration',
+                        action='store_true')
+    parser.add_argument('-p', '--plot',
+                        help='plots the cost function over time',
+                        action='store_true')
+    args = parser.parse_args()
 
-    X, y = init_matrices(data, 'Y', ['X1', 'X2'])
+    if args.data:
+        data = get_data(args.data)
+        # print(data)
+        print('Data Collected')
+
+    X, y = init_matrices(data, args.y_column, args.X_columns)
     # print(X)
     # print(y)
     print('X and y matrices created')
 
-    X = scale_features(X, 'min-max')
+    X = scale_features(X, str(args.scaling))
     # print(X)
     print('Features scaled')
 
@@ -112,18 +140,18 @@ def main():
     # print(grad)
     print('Calculated gradient')
 
-    alpha = 0.05
     epochs = 5000
-    learned_theta, J_history = learn_theta(alpha, epochs, X, theta, y)
+    learned_theta, J_history = learn_theta(float(args.alpha), args.epochs, X, theta, y, args.print)
     # print(learned_theta)
     # print(J_history)
     print('Theta values learned and J_history saved')
 
-    plot_cost(J_history)
+    if args.plot:
+        plot_cost(J_history)
 
     X_guess = [1, 7.673756466,3.508563011]
     guess = predict(X_guess, learned_theta)
-    print(guess)
+    # print(guess)
 
 
 main()
