@@ -45,9 +45,14 @@ def scale_features(X, option):
 def add_ones_column(X):
     return np.insert(X, 0, 1, axis=1)
 
-def init_theta_vector(theta_len):
-    '''creates a vector of random theta values'''
-    return np.random.random(theta_len)
+def init_theta_vector(y_labels, theta_len):
+    '''creates a pandas DF of random theta values with each row being used
+    for a different y_label'''
+    columns = []
+    for i in range(theta_len):
+        columns.append('theta' + str(i))
+    theta_df = pd.DataFrame(np.random.rand(), index=y_labels, columns=columns)
+    return theta_df
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -65,18 +70,38 @@ def learn_theta(alpha, epochs, X, theta, y, print_status):
     '''progressively learns and improves the values of theta using the Learning
     rate alpha over number of epochs stated. Records the history of the cost
     function to be plotted for debugging'''
-    J_history = []
-    for i in range(epochs):
-        h = predict(X, theta)
-        # print(cost_func(h,y))
-        for j in range(len(theta)):
-            theta[j] = theta[j] - alpha/len(h) * np.sum(np.dot((h-y), (X[:,j])))
 
-        if print_status == True:
-            print(cost_func(h,y))
-        J_history.append(cost_func(h,y))
+    J_hist_dict = {}
+    learned_theta = theta.copy()
 
-    return theta, J_history
+    for index, row in theta.iterrows():
+        theta_vals = row.values
+        J_history = []
+
+        y_adjusted = []
+        for h in y:
+            if h == index:
+                y_adjusted.append(1)
+            else:
+                y_adjusted.append(0)
+
+        y_adjusted = np.array(y_adjusted)
+
+        for i in range(epochs):
+            h = predict(X, theta_vals)
+
+            for j in range(len(theta_vals)):
+                theta_vals[j] = theta_vals[j] - alpha/len(h) * np.sum(np.dot((h-y_adjusted), (X[:,j])))
+
+            if print_status == True:
+                print(cost_func(h,y_adjusted))
+            J_history.append(cost_func(h,y_adjusted))
+
+        J_hist_dict['J_hist_' + str(index)] = J_history
+        learned_theta.iloc[index] = theta_vals
+
+
+    return learned_theta, J_hist_dict
 
 
 def plot_cost(J_history):
@@ -92,12 +117,12 @@ def main():
                         help='the column title of the outputs column')
     parser.add_argument('X_columns', nargs='+',
                         help='the columns to be included as features in X matrix')
-    parser.add_argument('-scaling', type=str,
-                        help='sclaing options are: min-max, mean-norm, standardization')
+    parser.add_argument('-scaling', type=str, default='standardization',
+                        help='sclaing options are: min-max, mean-norm, standardization (default)')
     parser.add_argument('-epochs', nargs='?', type=int, default=5000,
-                        help='the number of iterations to run through')
+                        help='the number of iterations to run through, default is 5000')
     parser.add_argument('-alpha', nargs='?', type=float, default=0.01,
-                        help='the chosen learning rate')
+                        help='the chosen learning rate, default is 0.01')
     parser.add_argument('-pr', '--print',
                         help='prints the cost function after erach iteration',
                         action='store_true')
@@ -106,10 +131,9 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
-    if args.data:
-        data = get_data(args.data)
-        # print(data)
-        print('Data Collected')
+    data = get_data(args.data)
+    # print(data)
+    print('Data Collected')
 
     X, y = init_matrices(data, args.y_column, args.X_columns)
     # print(X)
@@ -124,33 +148,21 @@ def main():
     # print(X)
     print('Ones column added')
 
-    theta = init_theta_vector(X.shape[1])
+    theta = init_theta_vector(list(set(y)), X.shape[1])
     # print(theta)
     print('Theta vector initialised')
 
-    h = predict(X, theta)
-    # print(h)
-    print('Calculated predictions')
-
-    J = cost_func(h, y)
-    # print(J)
-    print('Calculated Cost')
-
-    grad = gradient(X, h, y)
-    # print(grad)
-    print('Calculated gradient')
-
     learned_theta, J_history = learn_theta(float(args.alpha), args.epochs, X, theta, y, args.print)
-    # print(learned_theta)
+    print(learned_theta)
     # print(J_history)
     print('Theta values learned and J_history saved')
 
     if args.plot:
         plot_cost(J_history)
 
-    X_guess = [1, 7.673756466,3.508563011]
-    guess = predict(X_guess, learned_theta)
-    # print(guess)
+    # X_guess = [1, 7.673756466,3.508563011]
+    # guess = predict(X_guess, learned_theta)
+    # # print(guess)
 
 
 main()
