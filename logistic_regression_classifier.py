@@ -104,9 +104,9 @@ def learn_theta(alpha, epochs, X, theta, y, print_status):
     return learned_theta, J_hist_dict
 
 
-def plot_cost(J_history):
-    plt.plot(range(len(J_history)), J_history)
-    plt.show()
+def plot_cost(J_history, legend):
+    plt.plot(range(len(J_history)), J_history, label=str(legend))
+    # plt.show()
 
 def main():
 
@@ -152,13 +152,16 @@ def main():
     # print(theta)
     print('Theta vector initialised')
 
-    learned_theta, J_history = learn_theta(float(args.alpha), args.epochs, X, theta, y, args.print)
+    learned_theta, J_hist_dict = learn_theta(float(args.alpha), args.epochs, X, theta, y, args.print)
     print(learned_theta)
     # print(J_history)
     print('Theta values learned and J_history saved')
 
     if args.plot:
-        plot_cost(J_history)
+        for key, value in J_hist_dict.items():
+            plot_cost(value, key)
+        plt.legend()
+        plt.show()
 
     # X_guess = [1, 7.673756466,3.508563011]
     # guess = predict(X_guess, learned_theta)
