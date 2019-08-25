@@ -11,5 +11,5 @@ An example of the usage in the command line:
 python .\logistic_regression_classifier.py .\simple_training.csv Y X1 X2
 
 TODO:
-- Create a new function that takes a sex of X values and predicts the most
-  likely class
+- Add comments and double check variable to make sure that they are consistent
+and they are not duplicative/unneeded
