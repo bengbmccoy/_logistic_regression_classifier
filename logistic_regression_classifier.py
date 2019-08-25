@@ -19,7 +19,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import argparse
-
+import operator
 
 def get_data(filepath):
     return pd.read_csv(filepath)
@@ -30,9 +30,21 @@ def init_matrices(data, y_vector, X_columns):
     y = data[y_vector].values
     return X, y
 
+def scale_test_data(X_guess, X, option):
+    X_guess_copy = X_guess.copy()
+    for col in range(X_guess.shape[1]):
+        if option == 'min-max':
+            X_guess_copy[:,col] = (X_guess[:,col] - np.min(X[:,col])) / (np.max(X[:,col]) - np.min(X[:,col]))
+        elif option == 'mean-norm':
+            X_guess_copy[:,col] = (X_guess[:,col] - np.mean(X[:,col])) / (np.max(X[:,col]) - np.min(X[:,col]))
+        elif option == 'standardization':
+            X_guess_copy[:,col] = (X_guess[:,col] - np.mean(X[:,col])) / (np.std(X[:,col]))
+
+    return X_guess_copy
+
 def scale_features(X, option):
     '''scales features based on the scaling type'''
-    X_norm = X
+    X_norm = X.copy()
     for col in range(X_norm.shape[1]):
         if option == 'min-max':
             X_norm[:,col] = (X_norm[:,col] - np.min(X_norm[:,col])) / (np.max(X_norm[:,col]) - np.min(X_norm[:,col]))
@@ -42,8 +54,8 @@ def scale_features(X, option):
             X_norm[:,col] = (X_norm[:,col] - np.mean(X_norm[:,col])) / (np.std(X_norm[:,col]))
     return X_norm
 
-def add_ones_column(X):
-    return np.insert(X, 0, 1, axis=1)
+def add_ones_column(X, axis_val):
+    return np.insert(X, 0, 1, axis=axis_val)
 
 def init_theta_vector(y_labels, theta_len):
     '''creates a pandas DF of random theta values with each row being used
@@ -98,15 +110,21 @@ def learn_theta(alpha, epochs, X, theta, y, print_status):
             J_history.append(cost_func(h,y_adjusted))
 
         J_hist_dict['J_hist_' + str(index)] = J_history
-        learned_theta.iloc[index] = theta_vals
-
+        learned_theta.loc[index] = theta_vals #This may need to change based on str index or int indexes
 
     return learned_theta, J_hist_dict
 
 
 def plot_cost(J_history, legend):
     plt.plot(range(len(J_history)), J_history, label=str(legend))
-    # plt.show()
+
+def guess(X_guess, learned_theta):
+    guess_dict = {}
+    for index, row in learned_theta.iterrows():
+        theta_vals = row.values
+        guess_dict[index] = predict(X_guess, theta_vals)
+    print(guess_dict)
+    return max(guess_dict.items(), key=operator.itemgetter(1))[0]
 
 def main():
 
@@ -123,6 +141,8 @@ def main():
                         help='the number of iterations to run through, default is 5000')
     parser.add_argument('-alpha', nargs='?', type=float, default=0.01,
                         help='the chosen learning rate, default is 0.01')
+    parser.add_argument('-test', type=str,
+                        help='the testing data filepath')
     parser.add_argument('-pr', '--print',
                         help='prints the cost function after erach iteration',
                         action='store_true')
@@ -135,37 +155,43 @@ def main():
     # print(data)
     print('Data Collected')
 
+    # print(args.X_columns)
     X, y = init_matrices(data, args.y_column, args.X_columns)
     # print(X)
     # print(y)
     print('X and y matrices created')
 
-    X = scale_features(X, str(args.scaling))
+    X_norm = scale_features(X, str(args.scaling))
     # print(X)
     print('Features scaled')
 
-    X = add_ones_column(X)
+    X_norm = add_ones_column(X_norm, 1)
     # print(X)
     print('Ones column added')
 
-    theta = init_theta_vector(list(set(y)), X.shape[1])
+    theta = init_theta_vector(list(set(y)), X_norm.shape[1])
     # print(theta)
     print('Theta vector initialised')
 
-    learned_theta, J_hist_dict = learn_theta(float(args.alpha), args.epochs, X, theta, y, args.print)
-    print(learned_theta)
-    # print(J_history)
+    learned_theta, J_hist_dict = learn_theta(float(args.alpha), args.epochs, X_norm, theta, y, args.print)
+    # print(learned_theta)
     print('Theta values learned and J_history saved')
 
     if args.plot:
         for key, value in J_hist_dict.items():
-            plot_cost(value, key)
+            plt.plot(range(len(value)), value, label=str(key))
         plt.legend()
         plt.show()
 
-    # X_guess = [1, 7.673756466,3.508563011]
-    # guess = predict(X_guess, learned_theta)
-    # # print(guess)
-
+    if args.test:
+        test_data = get_data(str(args.test))
+        X_guess = test_data[args.X_columns].values
+        X_guess_scaled = scale_test_data(X_guess, X, str(args.scaling))
+        X_guess_scaled = add_ones_column(X_guess_scaled, 1)
+        print(X_guess_scaled)
+        for index, row in test_data.iterrows():
+            y_guess = guess(X_guess_scaled[index], learned_theta)
+            test_data.loc[index, args.y_column] = y_guess
+        print(test_data)
 
 main()
