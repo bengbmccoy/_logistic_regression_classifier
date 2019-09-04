@@ -180,6 +180,9 @@ def main():
     if args.plot:
         for key, value in J_hist_dict.items():
             plt.plot(range(len(value)), value, label=str(key))
+        plt.title('Cost Function Ouput Vs Iteration Number')
+        plt.xlabel('Iteration')
+        plt.ylabel('Cost Function Output')
         plt.legend()
         plt.show()
 
